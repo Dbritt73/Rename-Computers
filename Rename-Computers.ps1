@@ -7,12 +7,15 @@
     name and new name must be in the same row of the spreadsheet.
 
     Able to target single computer with -ComputerName and -NewName parameter calls
+
 .EXAMPLE
-    Rename-computers.ps1 -verbose
-.EXAMPLE
-    Rename-computers.ps1 -Domaincreds (Get-Credential) -localadmincreds (Get-Credential)
+    Rename-computers.ps1 -CSVPath C:\Computers.csv -Domaincreds (Get-Credential) -localadmincreds (Get-Credential)
+
+    Example showing use with CSV file
 .EXAMPLE
     Rename-computers.ps1 -ComputerName 'SERVER01' -NewName 'SERVER02' -Domaincreds (Get-Credential) -localadmincreds (Get-Credential)
+
+    Example showing use when targeting single computer
 
 #>
 
@@ -25,6 +28,8 @@ param (
 
     [String]$Log = "$ENV:WINDIR\Temp\Rename-Computers.log",
 
+    [String]$CSVPath = "C:\Rename-Computer.csv",
+
     [String]$ComputerName,
 
     [String]$NewName
@@ -34,11 +39,11 @@ param (
 
 if (! $PSBoundParameters.ContainsKey('ComputerName')) {
 
-    $ScriptPath = $MyInvocation.MyCommand.Path
-    $CurrentDir = Split-Path $ScriptPath
-    [string]$csvfile = "$currentdir\Rename-Computer.csv"
+    #$ScriptPath = $MyInvocation.MyCommand.Path
+    #$CurrentDir = Split-Path $ScriptPath
+    #[string]$csvfile = $CSVPath
 
-    Import-Csv -Path $csvfile | Foreach-object {
+    Import-Csv -Path $CSVPath | Foreach-object {
         
         Try {
 
