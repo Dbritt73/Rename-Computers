@@ -1,6 +1,7 @@
 <#
 .Synopsis
     Rename computers to match the standardized naming convention decided upon
+    
 .DESCRIPTION
     Rename-Computers.ps1 is a script that ingests a pre filled CSV file template with one column containing the current
     names of the computers you would like to change and the other column containing the desired new name for the system. Old
@@ -12,6 +13,7 @@
     Rename-computers.ps1 -CSVPath C:\Computers.csv -Domaincreds (Get-Credential) -localadmincreds (Get-Credential)
 
     Example showing use with CSV file
+
 .EXAMPLE
     Rename-computers.ps1 -ComputerName 'SERVER01' -NewName 'SERVER02' -Domaincreds (Get-Credential) -localadmincreds (Get-Credential)
 
