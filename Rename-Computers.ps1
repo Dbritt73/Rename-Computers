@@ -5,6 +5,8 @@
     Rename-Computers.ps1 is a script that ingests a pre filled CSV file template with one column containing the current
     names of the computers you would like to change and the other column containing the desired new name for the system. Old
     name and new name must be in the same row of the spreadsheet.
+
+    Able to target single computer with -ComputerName and -NewName parameter calls
 .EXAMPLE
     Rename-computers.ps1 -verbose
 .EXAMPLE
