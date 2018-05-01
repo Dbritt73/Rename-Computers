@@ -33,21 +33,17 @@ param (
     [String]$ComputerName,
 
     [String]$NewName
+
 )
 
-
-
 if (! $PSBoundParameters.ContainsKey('ComputerName')) {
-
-    #$ScriptPath = $MyInvocation.MyCommand.Path
-    #$CurrentDir = Split-Path $ScriptPath
-    #[string]$csvfile = $CSVPath
 
     Import-Csv -Path $CSVPath | Foreach-object {
         
         Try {
 
             $params = @{
+
                 'ComputerName' = $_.Oldname;
                 'NewName' = $_.Newname;
                 'DomainCredential' = $DomainCreds;
@@ -57,6 +53,7 @@ if (! $PSBoundParameters.ContainsKey('ComputerName')) {
                 'ErrorAction' = 'Stop';
                 'Verbose' = $true;
                 'PassThru' = $true
+
             }
 
             Write-Verbose -Message "$(Get-Date) : Renaming $($_.Oldname) to $($_.Newname)" 4>> $Log
@@ -69,6 +66,7 @@ if (! $PSBoundParameters.ContainsKey('ComputerName')) {
             Write-Output "$(Get-Date) : Couldn't Rename $($currentcomp) : $($Error[0].Exception)" 1>> $Log
 
         }
+
     }
 
 } Else {
@@ -76,6 +74,7 @@ if (! $PSBoundParameters.ContainsKey('ComputerName')) {
     Try {
 
         $params = @{
+
             'ComputerName' = $ComputerName;
             'NewName' = $Newname;
             'DomainCredential' = $DomainCreds;
@@ -85,6 +84,7 @@ if (! $PSBoundParameters.ContainsKey('ComputerName')) {
             'ErrorAction' = 'Stop';
             'Verbose' = $true;
             'PassThru' = $true
+
         }
 
         Rename-Computer @params | Out-File $Log -Append
