@@ -29,13 +29,13 @@
 [cmdletbinding()]
 param (
 
-    [Pscredential]$DomainCreds = (Get-Credential -Message "This prompt is for your DOMAIN\Username account, needed to rename the computer in the Managed OU of AD"),
+    [System.Management.Automation.Credential()][Pscredential]$DomainCreds = (Get-Credential -Message 'This prompt is for your DOMAIN\Username account, needed to rename the computer in the Managed OU of AD'),
 
-    [Pscredential]$LocalAdminCreds = (Get-Credential -Message "This prompt is for your LOCAL\Admin account, Can be domain or local user to target, just needs to be in admin group"),
+    [System.Management.Automation.Credential()][Pscredential]$LocalAdminCreds = (Get-Credential -Message 'This prompt is for your LOCAL\Admin account, Can be domain or local user to target, just needs to be in admin group'),
 
     [String]$Log = "$ENV:WINDIR\Temp\Rename-Computers.log",
 
-    [String]$CSVPath = "C:\Rename-Computer.csv",
+    [String]$CSVPath = "$env:HOMEDRIVE\Rename-Computer.csv",
 
     [String]$ComputerName,
 
@@ -43,16 +43,69 @@ param (
 
 )
 
-if (! $PSBoundParameters.ContainsKey('ComputerName')) {
+Begin {}
 
-    Import-Csv -Path $CSVPath | Foreach-object {
-        
+Process {
+    
+    if (! $PSBoundParameters.ContainsKey('ComputerName')) {
+
+        Import-Csv -Path $CSVPath | Foreach-object {
+            
+            Try {
+    
+                $params = @{
+    
+                    'ComputerName' = $_.Oldname;
+                    'NewName' = $_.Newname;
+                    'DomainCredential' = $DomainCreds;
+                    'LocalCredential' = $LocalAdminCreds;
+                    'Restart' = $true;
+                    'Force' = $true;
+                    'ErrorAction' = 'Stop';
+                    'Verbose' = $true;
+                    'PassThru' = $true
+    
+                }
+    
+                Write-Verbose -Message "$(Get-Date) : Renaming $($_.Oldname) to $($_.Newname)" 4>> $Log
+                $CurrentComp = $_.Oldname
+    
+                Rename-Computer @params | out-file -FilePath $Log -Append
+    
+            } Catch {
+
+                # get error record
+                [Management.Automation.ErrorRecord]$e = $_
+
+                # retrieve information about runtime error
+                $info = [PSCustomObject]@{
+
+                    Date         = (Get-Date)
+                    ComputerName = $CurrentComp
+                    Exception    = $e.Exception.Message
+                    Reason       = $e.CategoryInfo.Reason
+                    Target       = $e.CategoryInfo.TargetName
+                    Script       = $e.InvocationInfo.ScriptName
+                    Line         = $e.InvocationInfo.ScriptLineNumber
+                    Column       = $e.InvocationInfo.OffsetInLine
+
+                }
+                
+                # output information. Post-process collected info, and log info (optional)
+                $info | Out-file -Path $Log
+
+            }
+    
+        }
+    
+    } Else {
+    
         Try {
-
+    
             $params = @{
-
-                'ComputerName' = $_.Oldname;
-                'NewName' = $_.Newname;
+    
+                'ComputerName' = $ComputerName;
+                'NewName' = $Newname;
                 'DomainCredential' = $DomainCreds;
                 'LocalCredential' = $LocalAdminCreds;
                 'Restart' = $true;
@@ -60,46 +113,38 @@ if (! $PSBoundParameters.ContainsKey('ComputerName')) {
                 'ErrorAction' = 'Stop';
                 'Verbose' = $true;
                 'PassThru' = $true
-
+    
             }
-
-            Write-Verbose -Message "$(Get-Date) : Renaming $($_.Oldname) to $($_.Newname)" 4>> $Log
-            $CurrentComp = $_.Oldname
-
-            Rename-Computer @params | out-file $Log -Append
-
+    
+            Rename-Computer @params | Out-File -FilePath $Log -Append
+    
         } Catch {
-
-            Write-Output "$(Get-Date) : Couldn't Rename $($currentcomp) : $($Error[0].Exception)" 1>> $Log
-
+    
+                #Write-Output "$(Get-Date) : Couldn't Rename $($currentcomp) : $($Error[0].Exception)" 1>> $Log
+                # get error record
+                [Management.Automation.ErrorRecord]$e = $_
+    
+                # retrieve information about runtime error
+                $info = [PSCustomObject]@{
+    
+                Date         = (Get-Date)
+                ComputerName = $ComputerName
+                Exception    = $e.Exception.Message
+                Reason       = $e.CategoryInfo.Reason
+                Target       = $e.CategoryInfo.TargetName
+                Script       = $e.InvocationInfo.ScriptName
+                Line         = $e.InvocationInfo.ScriptLineNumber
+                Column       = $e.InvocationInfo.OffsetInLine
+    
+            }
+            
+            # output information. Post-process collected info, and log info (optional)
+            $info | out-file $Log
+    
         }
-
-    }
-
-} Else {
-
-    Try {
-
-        $params = @{
-
-            'ComputerName' = $ComputerName;
-            'NewName' = $Newname;
-            'DomainCredential' = $DomainCreds;
-            'LocalCredential' = $LocalAdminCreds;
-            'Restart' = $true;
-            'Force' = $true;
-            'ErrorAction' = 'Stop';
-            'Verbose' = $true;
-            'PassThru' = $true
-
-        }
-
-        Rename-Computer @params | Out-File $Log -Append
-
-    } Catch {
-
-        Write-Output "$(Get-Date) : Couldn't Rename $($currentcomp) : $($Error[0].Exception)" 1>> $Log
-
+    
     }
 
 }
+
+End {}
